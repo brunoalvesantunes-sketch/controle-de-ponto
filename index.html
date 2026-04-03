@@ -188,7 +188,8 @@
 <script>
 (function() {
 
-  var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwBEWUYoVHrk7UWMef8AYuR_XyoFpPUPEB2DemCBTVYyMgKg7kORPocc73xTgSQzJ9b/exec';
+  var APPS_SCRIPT_URL = 'URL_PONTO_AQUI';
+  var FOTO_URL        = 'URL_FOTO_AQUI';
 
   var DIAS    = ['Domingo','Segunda-feira','Terca-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sabado'];
   var MESES_L = ['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
@@ -198,8 +199,11 @@
 
   function tick() {
     var d = new Date();
-    document.getElementById('hora').textContent = pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
-    document.getElementById('data').textContent = DIAS[d.getDay()] + ', ' + pad(d.getDate()) + ' de ' + MESES_L[d.getMonth()] + ' de ' + d.getFullYear();
+    document.getElementById('hora').textContent =
+      pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+    document.getElementById('data').textContent =
+      DIAS[d.getDay()] + ', ' + pad(d.getDate()) + ' de ' +
+      MESES_L[d.getMonth()] + ' de ' + d.getFullYear();
   }
   tick();
   setInterval(tick, 1000);
@@ -269,7 +273,9 @@
   function mostrarStatus(msg, tipo) {
     var el = document.getElementById('status');
     el.className = 'status ' + tipo;
-    el.innerHTML = tipo === 'carregando' ? '<span class="spinner"></span>' + msg : msg;
+    el.innerHTML = tipo === 'carregando'
+      ? '<span class="spinner"></span>' + msg
+      : msg;
   }
 
   var campoCPF = document.getElementById('cpf');
@@ -302,7 +308,7 @@
     btn.setAttribute('disabled', 'disabled');
     mostrarStatus('Registrando ponto, aguarde...', 'carregando');
 
-    // Passo 1: registra o ponto com no-cors (não lê resposta)
+    // Passo 1: registra o ponto (no-cors, não lê resposta)
     fetch(APPS_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
@@ -310,22 +316,33 @@
       body: JSON.stringify({ cpf: cpf })
     })
     .then(function() {
-      // Passo 2: envia a imagem separadamente com no-cors
+
+      // Passo 2: envia a foto para o script dedicado (com CORS normal)
       if (foto && foto.length > 100) {
-        var nomeArquivo = cpf + '_' + Date.now() + '.jpg';
-        return fetch(APPS_SCRIPT_URL, {
+        var agora = new Date();
+        var nomeArquivo =
+          cpf + '_' +
+          agora.getFullYear() +
+          pad(agora.getMonth() + 1) +
+          pad(agora.getDate()) +
+          pad(agora.getHours()) +
+          pad(agora.getMinutes()) +
+          pad(agora.getSeconds()) + '.jpg';
+
+        console.log('Enviando foto: ' + nomeArquivo);
+
+        return fetch(FOTO_URL, {
           method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify({
-            acao: 'salvarImagem',
-            imagem: foto,
-            nomeArquivo: nomeArquivo
-          })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imagem: foto, nomeArquivo: nomeArquivo })
         });
       }
     })
-    .then(function() {
+    .then(function(resp) {
+      if (resp) return resp.text();
+    })
+    .then(function(txt) {
+      console.log('Resposta foto: ' + txt);
       btn.removeAttribute('disabled');
       mostrarStatus('Ponto registrado com sucesso!', 'sucesso');
       campoCPF.value = '';
