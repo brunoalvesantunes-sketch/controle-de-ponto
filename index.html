@@ -217,7 +217,7 @@
 <script>
 (function() {
 
-  var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw9YTEXvfIxKuYZKHanBtMm2VaF0Z2U7C7rsQz0tXbAklBFZZIQmJnmf2R8747TB-zZ/exec';
+  var APPS_SCRIPT_URL = 'SUA_URL_AQUI';
 
   var DIAS    = ['Domingo','Segunda-feira','Terca-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sabado'];
   var MESES_L = ['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
@@ -326,23 +326,43 @@
     }
 
     var foto = capturarFoto();
+    console.log('Foto capturada, tamanho: ' + foto.length + ' caracteres');
 
     btn.setAttribute('disabled', 'disabled');
     mostrarStatus('Registrando ponto, aguarde...', 'carregando');
 
     fetch(APPS_SCRIPT_URL, {
       method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ cpf: cpf, imagem: foto })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cpf: cpf, imagem: foto }),
+      redirect: 'follow'
     })
-    .then(function() {
+    .then(function(response) {
+      return response.text();
+    })
+    .then(function(text) {
+      console.log('Resposta do servidor: ' + text);
       btn.removeAttribute('disabled');
-      mostrarStatus('Ponto registrado com sucesso!', 'sucesso');
-      campoCPF.value = '';
-      campoCPF.focus();
+      try {
+        var data = JSON.parse(text);
+        if (!data.sucesso) {
+          mostrarStatus(data.mensagem, 'erro');
+        } else {
+          var msg = data.tipo === 'entrada'
+            ? 'Entrada registrada - ' + data.nome
+            : 'Saida registrada - '   + data.nome;
+          mostrarStatus(msg, 'sucesso');
+          campoCPF.value = '';
+          campoCPF.focus();
+        }
+      } catch(pe) {
+        mostrarStatus('Ponto registrado com sucesso!', 'sucesso');
+        campoCPF.value = '';
+        campoCPF.focus();
+      }
     })
     .catch(function(err) {
+      console.log('Erro fetch: ' + err.message);
       btn.removeAttribute('disabled');
       mostrarStatus('Erro de conexao: ' + err.message, 'erro');
     });
