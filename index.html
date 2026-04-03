@@ -305,10 +305,19 @@
     var foto = capturarFoto();
     console.log('Foto capturada, tamanho: ' + foto.length + ' chars');
 
+    var agora = new Date();
+    var nomeArquivo = cpf + '_' +
+      agora.getFullYear() +
+      pad(agora.getMonth() + 1) +
+      pad(agora.getDate()) +
+      pad(agora.getHours()) +
+      pad(agora.getMinutes()) +
+      pad(agora.getSeconds()) + '.jpg';
+
     btn.setAttribute('disabled', 'disabled');
     mostrarStatus('Registrando ponto, aguarde...', 'carregando');
 
-    // Passo 1: registra o ponto (no-cors, não lê resposta)
+    // Chamada 1: registra o ponto na planilha
     fetch(APPS_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
@@ -316,33 +325,18 @@
       body: JSON.stringify({ cpf: cpf })
     })
     .then(function() {
-
-      // Passo 2: envia a foto para o script dedicado (com CORS normal)
+      // Chamada 2: envia a foto — também no-cors para evitar bloqueio CORS
       if (foto && foto.length > 100) {
-        var agora = new Date();
-        var nomeArquivo =
-          cpf + '_' +
-          agora.getFullYear() +
-          pad(agora.getMonth() + 1) +
-          pad(agora.getDate()) +
-          pad(agora.getHours()) +
-          pad(agora.getMinutes()) +
-          pad(agora.getSeconds()) + '.jpg';
-
         console.log('Enviando foto: ' + nomeArquivo);
-
         return fetch(FOTO_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain' },
           body: JSON.stringify({ imagem: foto, nomeArquivo: nomeArquivo })
         });
       }
     })
-    .then(function(resp) {
-      if (resp) return resp.text();
-    })
-    .then(function(txt) {
-      console.log('Resposta foto: ' + txt);
+    .then(function() {
       btn.removeAttribute('disabled');
       mostrarStatus('Ponto registrado com sucesso!', 'sucesso');
       campoCPF.value = '';
