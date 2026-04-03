@@ -6,7 +6,6 @@
   <title>Controle de Ponto</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       min-height: 100vh;
       display: flex;
@@ -15,7 +14,6 @@
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-
     .card {
       background: rgba(255,255,255,0.05);
       backdrop-filter: blur(10px);
@@ -26,9 +24,7 @@
       text-align: center;
       box-shadow: 0 20px 60px rgba(0,0,0,0.4);
     }
-
     .logo { font-size: 48px; margin-bottom: 10px; }
-
     h1 {
       color: #fff;
       font-size: 22px;
@@ -36,27 +32,23 @@
       margin-bottom: 24px;
       letter-spacing: 1px;
     }
-
     .relogio {
       background: rgba(0,0,0,0.3);
       border-radius: 12px;
       padding: 14px 24px;
       margin-bottom: 24px;
     }
-
     .hora {
       color: #00d4ff;
       font-size: 42px;
       font-weight: 700;
       letter-spacing: 4px;
     }
-
     .data {
       color: rgba(255,255,255,0.6);
       font-size: 14px;
       margin-top: 4px;
     }
-
     .camera-container {
       position: relative;
       width: 100%;
@@ -66,7 +58,6 @@
       background: #000;
       aspect-ratio: 4/3;
     }
-
     #video {
       width: 100%;
       height: 100%;
@@ -74,7 +65,6 @@
       display: block;
       transform: scaleX(-1);
     }
-
     .camera-erro {
       position: absolute;
       inset: 0;
@@ -86,9 +76,7 @@
       padding: 16px;
       text-align: center;
     }
-
     canvas { display: none; }
-
     label {
       display: block;
       color: rgba(255,255,255,0.8);
@@ -96,7 +84,6 @@
       margin-bottom: 10px;
       text-align: left;
     }
-
     input[type="text"] {
       width: 100%;
       padding: 14px 18px;
@@ -111,18 +98,15 @@
       transition: border-color 0.3s, background 0.3s;
       margin-bottom: 20px;
     }
-
     input[type="text"]::placeholder {
       color: rgba(255,255,255,0.3);
       font-size: 14px;
       letter-spacing: 1px;
     }
-
     input[type="text"]:focus {
       border-color: #00d4ff;
       background: rgba(0,212,255,0.05);
     }
-
     button {
       width: 100%;
       padding: 16px;
@@ -137,10 +121,8 @@
       text-transform: uppercase;
       transition: transform 0.2s, box-shadow 0.2s;
     }
-
     button:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,212,255,0.4); }
     button[disabled] { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
-
     .status {
       margin-top: 20px;
       padding: 14px;
@@ -150,28 +132,24 @@
       display: none;
       text-align: center;
     }
-
     .status.sucesso {
       background: rgba(0,200,100,0.15);
       border: 1px solid rgba(0,200,100,0.5);
       color: #00e676;
       display: block;
     }
-
     .status.erro {
       background: rgba(255,60,60,0.15);
       border: 1px solid rgba(255,60,60,0.5);
       color: #ff5252;
       display: block;
     }
-
     .status.carregando {
       background: rgba(0,212,255,0.1);
       border: 1px solid rgba(0,212,255,0.3);
       color: #00d4ff;
       display: block;
     }
-
     .spinner {
       display: inline-block;
       width: 12px;
@@ -183,7 +161,6 @@
       margin-right: 8px;
       vertical-align: middle;
     }
-
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
@@ -191,33 +168,27 @@
 <div class="card">
   <div class="logo">&#128336;</div>
   <h1>Controle de Ponto</h1>
-
   <div class="relogio">
     <div class="hora" id="hora">--:--:--</div>
     <div class="data" id="data">&nbsp;</div>
   </div>
-
   <div class="camera-container">
     <video id="video" autoplay playsinline muted></video>
     <div class="camera-erro" id="camera-erro">
       Camera indisponivel. O ponto sera registrado sem foto.
     </div>
   </div>
-
   <canvas id="canvas"></canvas>
-
   <label for="cpf">Digite seu CPF (somente numeros)</label>
   <input type="text" id="cpf" placeholder="00000000000" maxlength="11" inputmode="numeric"/>
-
   <button id="btn">Bater Ponto</button>
-
   <div class="status" id="status"></div>
 </div>
 
 <script>
 (function() {
 
-  var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwLFDqgKb-jTqhXlt8U8_XwWn_c8d1wXyqJG7G15fI-8FOMfbZl0MsjReAHAuyXWwab/exec';
+  var APPS_SCRIPT_URL = 'SUA_URL_AQUI';
 
   var DIAS    = ['Domingo','Segunda-feira','Terca-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sabado'];
   var MESES_L = ['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
@@ -326,43 +297,42 @@
     }
 
     var foto = capturarFoto();
-    console.log('Foto capturada, tamanho: ' + foto.length + ' caracteres');
+    console.log('Foto capturada, tamanho: ' + foto.length + ' chars');
 
     btn.setAttribute('disabled', 'disabled');
     mostrarStatus('Registrando ponto, aguarde...', 'carregando');
 
+    // Passo 1: registra o ponto com no-cors (não lê resposta)
     fetch(APPS_SCRIPT_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cpf: cpf, imagem: foto }),
-      redirect: 'follow'
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ cpf: cpf })
     })
-    .then(function(response) {
-      return response.text();
-    })
-    .then(function(text) {
-      console.log('Resposta do servidor: ' + text);
-      btn.removeAttribute('disabled');
-      try {
-        var data = JSON.parse(text);
-        if (!data.sucesso) {
-          mostrarStatus(data.mensagem, 'erro');
-        } else {
-          var msg = data.tipo === 'entrada'
-            ? 'Entrada registrada - ' + data.nome
-            : 'Saida registrada - '   + data.nome;
-          mostrarStatus(msg, 'sucesso');
-          campoCPF.value = '';
-          campoCPF.focus();
-        }
-      } catch(pe) {
-        mostrarStatus('Ponto registrado com sucesso!', 'sucesso');
-        campoCPF.value = '';
-        campoCPF.focus();
+    .then(function() {
+      // Passo 2: envia a imagem separadamente com no-cors
+      if (foto && foto.length > 100) {
+        var nomeArquivo = cpf + '_' + Date.now() + '.jpg';
+        return fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({
+            acao: 'salvarImagem',
+            imagem: foto,
+            nomeArquivo: nomeArquivo
+          })
+        });
       }
     })
+    .then(function() {
+      btn.removeAttribute('disabled');
+      mostrarStatus('Ponto registrado com sucesso!', 'sucesso');
+      campoCPF.value = '';
+      campoCPF.focus();
+    })
     .catch(function(err) {
-      console.log('Erro fetch: ' + err.message);
+      console.log('Erro: ' + err.message);
       btn.removeAttribute('disabled');
       mostrarStatus('Erro de conexao: ' + err.message, 'erro');
     });
