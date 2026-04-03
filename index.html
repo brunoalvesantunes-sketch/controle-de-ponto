@@ -225,7 +225,6 @@
 
   function pad(n) { return n < 10 ? '0' + n : '' + n; }
 
-  // ── Relógio ────────────────────────────────────────────────────────────────
   function tick() {
     var d = new Date();
     document.getElementById('hora').textContent = pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
@@ -234,7 +233,6 @@
   tick();
   setInterval(tick, 1000);
 
-  // ── Câmera ─────────────────────────────────────────────────────────────────
   var video = document.getElementById('video');
 
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
@@ -253,14 +251,13 @@
 
   function mostrarErroCamera() {
     video.style.display = 'none';
-    var el = document.getElementById('camera-erro');
-    el.style.display = 'flex';
+    document.getElementById('camera-erro').style.display = 'flex';
     cameraOk = false;
   }
 
   function capturarFoto() {
     if (!cameraOk) return '';
-    var canvas  = document.getElementById('canvas');
+    var canvas = document.getElementById('canvas');
     canvas.width  = video.videoWidth  || 640;
     canvas.height = video.videoHeight || 480;
     var ctx = canvas.getContext('2d');
@@ -270,7 +267,6 @@
     return canvas.toDataURL('image/jpeg', 0.8);
   }
 
-  // ── Validações ─────────────────────────────────────────────────────────────
   function apenasNums(s) {
     var r = '';
     for (var i = 0; i < s.length; i++) {
@@ -287,81 +283,5 @@
     for (var i = 1; i < 11; i++) { if (cpf[i] !== cpf[0]) { igual = false; break; } }
     if (igual) return false;
     var soma = 0, resto;
-    for (var i = 0; i < 9; i++) soma += parseInt(cpf[i]) * (10 - i);
-    resto = (soma * 10) % 11;
-    if (resto === 10 || resto === 11) resto = 0;
-    if (resto !== parseInt(cpf[9])) return false;
-    soma = 0;
-    for (var i = 0; i < 10; i++) soma += parseInt(cpf[i]) * (11 - i);
-    resto = (soma * 10) % 11;
-    if (resto === 10 || resto === 11) resto = 0;
-    if (resto !== parseInt(cpf[10])) return false;
-    return true;
-  }
+    for (var i = 0; i < 9
 
-  // ── Status ─────────────────────────────────────────────────────────────────
-  function mostrarStatus(msg, tipo) {
-    var el = document.getElementById('status');
-    el.className = 'status ' + tipo;
-    el.innerHTML = tipo === 'carregando' ? '<span class="spinner"></span>' + msg : msg;
-  }
-
-  // ── Eventos ────────────────────────────────────────────────────────────────
-  var campoCPF = document.getElementById('cpf');
-  var btn      = document.getElementById('btn');
-
-  campoCPF.addEventListener('input', function() {
-    var v = apenasNums(this.value);
-    this.value = v.length > 11 ? v.substring(0, 11) : v;
-  });
-
-  campoCPF.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') baterPonto();
-  });
-
-  btn.addEventListener('click', baterPonto);
-  campoCPF.focus();
-
-  // ── Ação principal ─────────────────────────────────────────────────────────
-  function baterPonto() {
-    var cpf = apenasNums(campoCPF.value);
-
-    if (!validarCPF(cpf)) {
-      mostrarStatus('CPF invalido. Verifique e tente novamente.', 'erro');
-      campoCPF.focus();
-      return;
-    }
-
-    var foto = capturarFoto();
-
-    btn.setAttribute('disabled', 'disabled');
-    mostrarStatus('Registrando ponto, aguarde...', 'carregando');
-
-    fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      body: JSON.stringify({ cpf: cpf, imagem: foto })
-    })
-    .then(function(response) { return response.json(); })
-    .then(function(data) {
-      btn.removeAttribute('disabled');
-      if (!data.sucesso) {
-        mostrarStatus(data.mensagem, 'erro');
-      } else {
-        var msg = data.tipo === 'entrada'
-          ? 'Entrada registrada - ' + data.nome
-          : 'Saida registrada - '   + data.nome;
-        mostrarStatus(msg, 'sucesso');
-        campoCPF.value = '';
-        campoCPF.focus();
-      }
-    })
-    .catch(function(err) {
-      btn.removeAttribute('disabled');
-      mostrarStatus('Erro de conexao: ' + err.message, 'erro');
-    });
-  }
-
-}());
-</script>
-</body>
-</html>
