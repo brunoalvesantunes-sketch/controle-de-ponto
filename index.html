@@ -131,6 +131,7 @@
       font-weight: 600;
       display: none;
       text-align: center;
+      line-height: 1.6;
     }
     .status.sucesso {
       background: rgba(0,200,100,0.15);
@@ -189,7 +190,7 @@
 (function() {
 
   var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwMVleDbcd5aWId9De8XhQquDEtCSZm-Qe1U0QY7BtnhP-4_QC3NQ1R1NtiyBUC9cFE/exec';
-  var FOTO_URL        = 'https://script.google.com/macros/s/AKfycby2bFjONOtgaN-u9eV9lAT-1T8eJKS9uQQ7yijzRQ03kpcTFeE2cjAzBgeJzrJ9G9NL/exec';
+  var FOTO_URL        = 'https://script.google.com/macros/s/AKfycby0rOrYOtpbDPbuUiVaSfpgaBnnD7SjlMW13a0xB-zgh9K5U98BkNZ5yt5Db9Lmzyo/exec';
 
   var DIAS    = ['Domingo','Segunda-feira','Terca-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sabado'];
   var MESES_L = ['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
@@ -294,60 +295,60 @@
   campoCPF.focus();
 
   function baterPonto() {
-  var cpf = apenasNums(campoCPF.value);
+    var cpf = apenasNums(campoCPF.value);
 
-  if (!validarCPF(cpf)) {
-    mostrarStatus('CPF invalido. Verifique e tente novamente.', 'erro');
-    campoCPF.focus();
-    return;
-  }
-
-  var foto = capturarFoto();
-  console.log('Foto capturada, tamanho: ' + foto.length + ' chars');
-
-  btn.setAttribute('disabled', 'disabled');
-  mostrarStatus('Registrando ponto, aguarde...', 'carregando');
-
-  fetch(APPS_SCRIPT_URL, {
-    method: 'POST',
-    mode: 'cors',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({ cpf: cpf })
-  })
-  .then(function(res) { return res.json(); })
-  .then(function(dados) {
-    if (foto && foto.length > 100) {
-      console.log('Enviando foto para o script...');
-      fetch(FOTO_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ imagem: foto, cpf: cpf })
-      });
+    if (!validarCPF(cpf)) {
+      mostrarStatus('CPF invalido. Verifique e tente novamente.', 'erro');
+      campoCPF.focus();
+      return;
     }
 
-    btn.removeAttribute('disabled');
+    var foto = capturarFoto();
+    console.log('Foto capturada, tamanho: ' + foto.length + ' chars');
 
-    if (dados.sucesso) {
-      var tipo = dados.tipo === 'entrada' ? 'Entrada' : 'Saída';
-      var msg  = tipo + ' registrada com sucesso!<br><strong>' + dados.nome + '</strong>';
-      if (dados.tipo === 'saida' && dados.total) {
-        msg;
+    btn.setAttribute('disabled', 'disabled');
+    mostrarStatus('Registrando ponto, aguarde...', 'carregando');
+
+    fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ cpf: cpf })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(dados) {
+      if (foto && foto.length > 100) {
+        console.log('Enviando foto para o script...');
+        fetch(FOTO_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ imagem: foto, cpf: cpf })
+        });
       }
-      mostrarStatus(msg, 'sucesso');
-    } else {
-      mostrarStatus(dados.mensagem || 'Erro ao registrar ponto.', 'erro');
-    }
 
-    campoCPF.value = '';
-    campoCPF.focus();
-  })
-  .catch(function(err) {
-    console.log('Erro: ' + err.message);
-    btn.removeAttribute('disabled');
-    mostrarStatus('Erro de conexao: ' + err.message, 'erro');
-  });
-}
+      btn.removeAttribute('disabled');
+
+      if (dados.sucesso) {
+        var tipo = dados.tipo === 'entrada' ? 'Entrada' : 'Saida';
+        var msg  = tipo + ' registrada com sucesso!<br><strong>' + dados.nome + '</strong>';
+        if (dados.tipo === 'saida' && dados.total) {
+          msg += '<br>Total trabalhado: ' + dados.total;
+        }
+        mostrarStatus(msg, 'sucesso');
+      } else {
+        mostrarStatus(dados.mensagem || 'Erro ao registrar ponto.', 'erro');
+      }
+
+      campoCPF.value = '';
+      campoCPF.focus();
+    })
+    .catch(function(err) {
+      console.log('Erro: ' + err.message);
+      btn.removeAttribute('disabled');
+      mostrarStatus('Erro de conexao: ' + err.message, 'erro');
+    });
+  }
 
 }());
 </script>
