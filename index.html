@@ -332,9 +332,6 @@
       if (dados.sucesso) {
         var tipo = dados.tipo === 'entrada' ? 'Entrada' : 'Saida';
         var msg  = tipo + ' registrada com sucesso!<br><strong>' + dados.nome + '</strong>';
-        if (dados.tipo === 'saida' && dados.total) {
-          msg += '<br>Total trabalhado: ' + dados.total;
-        }
         mostrarStatus(msg, 'sucesso');
       } else {
         mostrarStatus(dados.mensagem || 'Erro ao registrar ponto.', 'erro');
