@@ -330,9 +330,7 @@
 
     if (dados.sucesso) {
       var tipo = dados.tipo === 'entrada' ? 'Entrada' : 'Saída';
-      var msg  = tipo + ' registrada com sucesso!<br><strong>' + dados.nome + '</strong>';
-      if (dados.tipo === 'saida' && dados.total) {
-        msg += '<br>Total trabalhado: ' + dados.total;
+      var msg  = tipo + ' registrada com sucesso!<br><strong>' + dados.nome + '</strong>'
       }
       mostrarStatus(msg, 'sucesso');
     } else {
