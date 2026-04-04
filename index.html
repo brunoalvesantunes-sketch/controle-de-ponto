@@ -188,8 +188,7 @@
 <script>
 (function() {
 
-  var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxdJcwOAfsQmnrAI_LCfrj7mWF0AC0bVPSilYBdeyFNWwK6PSl-ecxVQRfIQBq9O0fR/exec';
-  var FOTO_URL        = 'https://script.google.com/macros/s/AKfycbz0mKvct24HgK5F814yam_rmlWx0ot7FfcDxW5EQQUz1Bev65jBPfnMMNtIkmbNrhGv/exec';
+  var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx4Js-qzSeankG0JAfD9xnd7lIh6SnWHQL6XxSZQQYQBfDJuzphH75GkWOULalkg9wC/exec';
 
   var DIAS    = ['Domingo','Segunda-feira','Terca-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sabado'];
   var MESES_L = ['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
@@ -308,24 +307,11 @@
     btn.setAttribute('disabled', 'disabled');
     mostrarStatus('Registrando ponto, aguarde...', 'carregando');
 
-    // Chamada 1: registra o ponto e recebe o nome do funcionario na resposta
     fetch(APPS_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ cpf: cpf })
-    })
-    .then(function() {
-      // Chamada 2: envia foto com o CPF — o script de fotos busca o nome
-      if (foto && foto.length > 100) {
-        console.log('Enviando foto...');
-        return fetch(FOTO_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify({ imagem: foto, cpf: cpf })
-        });
-      }
+      body: JSON.stringify({ cpf: cpf, imagem: foto })
     })
     .then(function() {
       btn.removeAttribute('disabled');
