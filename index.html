@@ -189,7 +189,7 @@
 (function() {
 
   var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzHUonVoG8yd4fc5ky6U5R4tpmYuBNLWoqzq6pYQ5q0l9hNHrVMX0Doz_TsiGdgjTw3/exec';
-  var FOTO_URL        = 'https://script.google.com/macros/s/AKfycbz8-SU42wlNaWEqkBwCdiWABgeydeY3A7iMpiMDxtHVMIjC5lCRSXpU4vjxZtsAd4Xd/exec';
+  var FOTO_URL        = 'https://script.google.com/macros/s/AKfycbx4vUKezwNCxeH1P9pP82RFdQb-wZme0dPFSUxi8f4-etC1usA9PiDYeLP-HLeHvgmi/exec';
 
   var DIAS    = ['Domingo','Segunda-feira','Terca-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sabado'];
   var MESES_L = ['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
@@ -308,6 +308,7 @@
     btn.setAttribute('disabled', 'disabled');
     mostrarStatus('Registrando ponto, aguarde...', 'carregando');
 
+    // Chamada 1: registra o ponto na planilha
     fetch(APPS_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
@@ -315,7 +316,9 @@
       body: JSON.stringify({ cpf: cpf })
     })
     .then(function() {
+      // Chamada 2: envia a foto com o CPF — o script de fotos busca o nome na planilha
       if (foto && foto.length > 100) {
+        console.log('Enviando foto para o script...');
         return fetch(FOTO_URL, {
           method: 'POST',
           mode: 'no-cors',
