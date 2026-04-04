@@ -188,7 +188,7 @@
 <script>
 (function() {
 
-  var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzc87sQcjAbDtkmTR-5n9QQFsEPxYDuX9E7fMrLXUN5GyZ9QpBojLTkDL_QL_MFYU5M/exec';
+  var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyhYGtDvgqnzADm9CTplR4lgVIO_kXQXkAbVOujvxYx7y3qGfgDIb8lmdowS9f0KWaR/exec';
   var FOTO_URL        = 'https://script.google.com/macros/s/AKfycbzAOHgKABoc9WH4QJ5dY1tTKK-tAI6HamkcVrjUlgJzCp43ZakIurBx6LaDrqSlXK-q/exec';
 
   var DIAS    = ['Domingo','Segunda-feira','Terca-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sabado'];
@@ -305,15 +305,6 @@
     var foto = capturarFoto();
     console.log('Foto capturada, tamanho: ' + foto.length + ' chars');
 
-    var agora = new Date();
-    var nomeArquivo = cpf + '_' +
-      agora.getFullYear() +
-      pad(agora.getMonth() + 1) +
-      pad(agora.getDate()) +
-      pad(agora.getHours()) +
-      pad(agora.getMinutes()) +
-      pad(agora.getSeconds()) + '.jpg';
-
     btn.setAttribute('disabled', 'disabled');
     mostrarStatus('Registrando ponto, aguarde...', 'carregando');
 
@@ -325,14 +316,14 @@
       body: JSON.stringify({ cpf: cpf })
     })
     .then(function() {
-      // Chamada 2: envia a foto — também no-cors para evitar bloqueio CORS
+      // Chamada 2: envia a foto com o CPF — o script de fotos busca o nome na planilha
       if (foto && foto.length > 100) {
-        console.log('Enviando foto: ' + nomeArquivo);
+        console.log('Enviando foto para o script...');
         return fetch(FOTO_URL, {
           method: 'POST',
           mode: 'no-cors',
           headers: { 'Content-Type': 'text/plain' },
-         body: JSON.stringify({ imagem: foto, cpf: cpf })
+          body: JSON.stringify({ imagem: foto, cpf: cpf })
         });
       }
     })
