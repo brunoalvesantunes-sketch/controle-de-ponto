@@ -188,7 +188,8 @@
 <script>
 (function() {
 
-  var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx4Js-qzSeankG0JAfD9xnd7lIh6SnWHQL6XxSZQQYQBfDJuzphH75GkWOULalkg9wC/exec';
+  var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzHUonVoG8yd4fc5ky6U5R4tpmYuBNLWoqzq6pYQ5q0l9hNHrVMX0Doz_TsiGdgjTw3/exec';
+  var FOTO_URL        = 'https://script.google.com/macros/s/AKfycbz8-SU42wlNaWEqkBwCdiWABgeydeY3A7iMpiMDxtHVMIjC5lCRSXpU4vjxZtsAd4Xd/exec';
 
   var DIAS    = ['Domingo','Segunda-feira','Terca-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sabado'];
   var MESES_L = ['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
@@ -311,7 +312,17 @@
       method: 'POST',
       mode: 'no-cors',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ cpf: cpf, imagem: foto })
+      body: JSON.stringify({ cpf: cpf })
+    })
+    .then(function() {
+      if (foto && foto.length > 100) {
+        return fetch(FOTO_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ imagem: foto, cpf: cpf })
+        });
+      }
     })
     .then(function() {
       btn.removeAttribute('disabled');
