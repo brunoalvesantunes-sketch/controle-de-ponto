@@ -190,7 +190,12 @@
 (function() {
 
   var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyWSrYEsrW8MqTAYjmRiibvCy-At-o8O3tmCBp2Nx4sIcgxAX8eCNctZuJUJQIZlcSY/exec';
-  var FOTO_URL        = 'https://script.google.com/macros/s/AKfycbxRjWZP7J7oyqCXuc1S3a2JuJVkMbMGH4y7L3cw6qenJf58haAdlCqhFTPd3ingmPT6/exec';
+  var FOTO_URL        = 'https://script.google.com/macros/s/AKfycbw9G52CKvfhuw9d2KaNPfRQuLu8vhXuPSllc9EM2Sd5c7A_pFX9VHbIr6wnFCKOGa8Z/exec';
+
+  // Coordenadas da Rua Santa Luzia, 301 - Centro, Rio de Janeiro
+  var LOCAL_LAT  = -22.9055;
+  var LOCAL_LNG  = -43.1736;
+  var RAIO_KM    = 1.0;
 
   var DIAS    = ['Domingo','Segunda-feira','Terca-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sabado'];
   var MESES_L = ['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
@@ -279,6 +284,41 @@
       : msg;
   }
 
+  // Fórmula de Haversine para calcular distância entre duas coordenadas em KM
+  function calcularDistanciaKm(lat1, lng1, lat2, lng2) {
+    var R = 6371;
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLng = (lng2 - lng1) * Math.PI / 180;
+    var a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  function obterLocalizacao() {
+    return new Promise(function(resolve, reject) {
+      if (!navigator.geolocation) {
+        reject(new Error('Seu navegador nao suporta geolocalização.'));
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        function(pos) { resolve(pos); },
+        function(err) {
+          if (err.code === 1) {
+            reject(new Error('Permissao de localizacao negada. Autorize o acesso para bater o ponto.'));
+          } else if (err.code === 2) {
+            reject(new Error('Nao foi possivel determinar sua localizacao. Verifique o GPS.'));
+          } else {
+            reject(new Error('Tempo esgotado ao obter localizacao. Tente novamente.'));
+          }
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    });
+  }
+
   var campoCPF = document.getElementById('cpf');
   var btn      = document.getElementById('btn');
 
@@ -303,49 +343,76 @@
       return;
     }
 
-    var foto = capturarFoto();
-    console.log('Foto capturada, tamanho: ' + foto.length + ' chars');
-
     btn.setAttribute('disabled', 'disabled');
-    mostrarStatus('Registrando ponto, aguarde...', 'carregando');
+    mostrarStatus('Verificando sua localizacao...', 'carregando');
 
-    fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      mode: 'cors',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ cpf: cpf })
-    })
-    .then(function(res) { return res.json(); })
-    .then(function(dados) {
+    obterLocalizacao()
+      .then(function(pos) {
+        var lat = pos.coords.latitude;
+        var lng = pos.coords.longitude;
+        var distancia = calcularDistanciaKm(lat, lng, LOCAL_LAT, LOCAL_LNG);
 
-      if (foto && foto.length > 100 && dados.sucesso && dados.nome) {
-        console.log('Enviando foto para o script com nome: ' + dados.nome);
-        fetch(FOTO_URL, {
+        console.log('Distancia do local: ' + distancia.toFixed(3) + ' km');
+
+        if (distancia > RAIO_KM) {
+          btn.removeAttribute('disabled');
+          mostrarStatus(
+            'Voce esta fora da area permitida para registro de ponto.<br>' +
+            'Distancia atual: <strong>' + distancia.toFixed(2).replace('.', ',') + ' km</strong> do local de trabalho.<br>' +
+            'O registro so e permitido em um raio de 1 km.',
+            'erro'
+          );
+          return;
+        }
+
+        var foto = capturarFoto();
+        console.log('Foto capturada, tamanho: ' + foto.length + ' chars');
+
+        mostrarStatus('Registrando ponto, aguarde...', 'carregando');
+
+        fetch(APPS_SCRIPT_URL, {
           method: 'POST',
-          mode: 'no-cors',
+          mode: 'cors',
           headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify({ imagem: foto, cpf: cpf, nome: dados.nome })
+          body: JSON.stringify({ cpf: cpf })
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(dados) {
+
+          if (foto && foto.length > 100 && dados.sucesso && dados.nome) {
+            console.log('Enviando foto para o script com nome: ' + dados.nome);
+            fetch(FOTO_URL, {
+              method: 'POST',
+              mode: 'no-cors',
+              headers: { 'Content-Type': 'text/plain' },
+              body: JSON.stringify({ imagem: foto, cpf: cpf, nome: dados.nome })
+            });
+          }
+
+          btn.removeAttribute('disabled');
+
+          if (dados.sucesso) {
+            var tipo = dados.tipo === 'entrada' ? 'Entrada' : 'Saida';
+            var msg  = tipo + ' registrada com sucesso!<br><strong>' + dados.nome + '</strong>';
+            mostrarStatus(msg, 'sucesso');
+          } else {
+            mostrarStatus(dados.mensagem || 'Erro ao registrar ponto.', 'erro');
+          }
+
+          campoCPF.value = '';
+          campoCPF.focus();
+        })
+        .catch(function(err) {
+          console.log('Erro: ' + err.message);
+          btn.removeAttribute('disabled');
+          mostrarStatus('Erro de conexao: ' + err.message, 'erro');
         });
-      }
 
-      btn.removeAttribute('disabled');
-
-      if (dados.sucesso) {
-        var tipo = dados.tipo === 'entrada' ? 'Entrada' : 'Saida';
-        var msg  = tipo + ' registrada com sucesso!<br><strong>' + dados.nome + '</strong>';
-        mostrarStatus(msg, 'sucesso');
-      } else {
-        mostrarStatus(dados.mensagem || 'Erro ao registrar ponto.', 'erro');
-      }
-
-      campoCPF.value = '';
-      campoCPF.focus();
-    })
-    .catch(function(err) {
-      console.log('Erro: ' + err.message);
-      btn.removeAttribute('disabled');
-      mostrarStatus('Erro de conexao: ' + err.message, 'erro');
-    });
+      })
+      .catch(function(err) {
+        btn.removeAttribute('disabled');
+        mostrarStatus(err.message, 'erro');
+      });
   }
 
 }());
